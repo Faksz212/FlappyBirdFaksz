@@ -4,78 +4,84 @@ const startBtn = document.getElementById("startBtn");
 const scoreEl = document.getElementById("score");
 const highScoreEl = document.getElementById("highScore");
 
-let bird, pipes, score, highScore, frame, gameOver, started;
+// Load assets
+const birdImg = new Image();
+birdImg.src = "bird.gif"; // burung animasi gif/png
 
-// Suara
-const soundJump = new Audio("https://www.fesliyanstudios.com/play-mp3/387");
-const soundCrash = new Audio("https://www.fesliyanstudios.com/play-mp3/6674");
-const soundScore = new Audio("https://www.fesliyanstudios.com/play-mp3/6661");
+const bgImg = new Image();
+bgImg.src = "bg.png"; // background langit
+
+let bird, pipes, score, highScore, frame, started, gameOver;
 
 function resetGame() {
-  bird = { x: 50, y: 150, w: 25, h: 25, gravity: 0.6, lift: -10, velocity: 0 };
+  bird = { x: 50, y: 150, w: 34, h: 24, gravity: 0.6, lift: -10, velocity: 0 };
   pipes = [];
   score = 0;
   frame = 0;
   gameOver = false;
-  started = false;
   scoreEl.textContent = score;
 }
 
-function drawBird() {
-  ctx.fillStyle = "yellow";
-  ctx.beginPath();
-  ctx.arc(bird.x + bird.w / 2, bird.y + bird.h / 2, bird.w / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Mata
-  ctx.fillStyle = "#000";
-  ctx.beginPath();
-  ctx.arc(bird.x + 10, bird.y + 8, 3, 0, Math.PI * 2);
-  ctx.fill();
+function init() {
+  highScore = localStorage.getItem("flappyHighScore") || 0;
+  highScoreEl.textContent = highScore;
+  started = false;
+  gameOver = false;
+  resetGame();
+  requestAnimationFrame(gameLoop);
 }
 
-function drawBackground() {
-  ctx.fillStyle = "#70c5ce";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Ground
-  ctx.fillStyle = "#ded895";
-  ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+function drawBird() {
+  ctx.drawImage(birdImg, bird.x, bird.y, bird.w, bird.h);
 }
 
 function drawPipes() {
   ctx.fillStyle = "green";
-  pipes.forEach(pipe => {
-    ctx.fillRect(pipe.x, 0, pipe.w, pipe.top);
-    ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.w, pipe.bottom);
+  pipes.forEach(p => {
+    // top pipe
+    ctx.fillRect(p.x, 0, p.w, p.top);
+    ctx.strokeStyle = "#004d00";
+    ctx.strokeRect(p.x, 0, p.w, p.top);
+
+    // bottom pipe
+    ctx.fillRect(p.x, canvas.height - p.bottom, p.w, p.bottom);
+    ctx.strokeRect(p.x, canvas.height - p.bottom, p.w, p.bottom);
   });
 }
 
 function update() {
   if (!started || gameOver) return;
 
+  // Bird physics
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
 
-  if (bird.y + bird.h > canvas.height - 50) {
+  if (bird.y + bird.h > canvas.height) {
     endGame();
   }
 
-  pipes.forEach(pipe => {
-    pipe.x -= 2;
+  // Pipes
+  if (frame % 90 === 0) {
+    let gap = 120;
+    let top = Math.random() * (canvas.height - gap - 100) + 20;
+    pipes.push({ x: canvas.width, w: 50, top: top, bottom: canvas.height - top - gap });
+  }
 
+  pipes.forEach(p => {
+    p.x -= 2;
+
+    // Collision
     if (
-      bird.x < pipe.x + pipe.w &&
-      bird.x + bird.w > pipe.x &&
-      (bird.y < pipe.top || bird.y + bird.h > canvas.height - pipe.bottom)
+      bird.x < p.x + p.w &&
+      bird.x + bird.w > p.x &&
+      (bird.y < p.top || bird.y + bird.h > canvas.height - p.bottom)
     ) {
       endGame();
     }
 
-    if (!pipe.passed && pipe.x + pipe.w < bird.x) {
+    // Score
+    if (p.x + p.w === bird.x) {
       score++;
-      soundScore.play();
-      pipe.passed = true;
       scoreEl.textContent = score;
       if (score > highScore) {
         highScore = score;
@@ -85,58 +91,54 @@ function update() {
     }
   });
 
-  if (frame % 90 === 0) {
-    let gap = 120;
-    let top = Math.floor(Math.random() * (canvas.height - gap - 100)) + 20;
-    let bottom = canvas.height - top - gap;
-    pipes.push({ x: canvas.width, w: 40, top: top, bottom: bottom, passed: false });
+  pipes = pipes.filter(p => p.x + p.w > 0);
+
+  frame++;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height); // background
+  drawBird();
+  drawPipes();
+
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "24px Arial";
+    ctx.fillText("Game Over!", canvas.width / 2 - 60, canvas.height / 2);
+    startBtn.style.display = "block";
   }
 }
 
-function drawScore() {
-  ctx.fillStyle = "#000";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 10, 25);
-}
-
 function gameLoop() {
-  frame++;
-  drawBackground();
-  drawPipes();
-  drawBird();
-  drawScore();
   update();
+  draw();
   requestAnimationFrame(gameLoop);
 }
 
 function endGame() {
-  soundCrash.play();
   gameOver = true;
-  startBtn.textContent = "↻ Restart";
-  startBtn.style.display = "block";
+  started = false;
 }
 
-document.addEventListener("keydown", () => {
-  if (started && !gameOver) {
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && started && !gameOver) {
     bird.velocity = bird.lift;
-    soundJump.play();
   }
 });
-canvas.addEventListener("touchstart", () => {
+
+canvas.addEventListener("click", () => {
   if (started && !gameOver) {
     bird.velocity = bird.lift;
-    soundJump.play();
   }
 });
 
 startBtn.addEventListener("click", () => {
   resetGame();
   started = true;
+  gameOver = false;
   startBtn.style.display = "none";
 });
 
-highScore = localStorage.getItem("flappyHighScore") || 0;
-highScoreEl.textContent = highScore;
-
-resetGame();
-gameLoop();
+init();
+                   
