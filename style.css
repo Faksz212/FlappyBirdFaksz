@@ -4,7 +4,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #70c5ce; /* fallback */
+  background: #70c5ce;
   font-family: Arial, sans-serif;
 }
 
@@ -22,27 +22,22 @@ canvas {
 
 #startBtn {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 12px 24px;
   font-size: 18px;
+  font-weight: bold;
   background: orange;
   border: none;
-  border-radius: 20px;
+  border-radius: 25px;
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease;
 }
-
 #startBtn:hover {
-  background: darkorange;
   transform: translate(-50%, -50%) scale(1.1);
 }
 
 .scoreboard {
   margin-top: 10px;
-  font-size: 18px;
-  }
-  
+}
