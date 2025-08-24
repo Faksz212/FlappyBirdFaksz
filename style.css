@@ -1,11 +1,10 @@
 body {
   margin: 0;
-  padding: 0;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: linear-gradient(to bottom, #70c5ce, #fff);
+  background: #70c5ce; /* fallback */
   font-family: Arial, sans-serif;
 }
 
@@ -16,31 +15,34 @@ body {
 
 canvas {
   border: 2px solid #333;
-  background: #70c5ce;
   border-radius: 10px;
+  background: url("bg.png") no-repeat center;
+  background-size: cover;
 }
 
 #startBtn {
   position: absolute;
-  top: 40%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 12px 25px;
-  font-size: 20px;
-  background: #ffcc00;
+  padding: 12px 24px;
+  font-size: 18px;
+  background: orange;
   border: none;
-  border-radius: 25px;
+  border-radius: 20px;
   cursor: pointer;
   font-weight: bold;
-  transition: 0.3s;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
 }
 
 #startBtn:hover {
-  background: #ff9900;
+  background: darkorange;
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
-#scoreBoard {
+.scoreboard {
   margin-top: 10px;
   font-size: 18px;
-  color: #333;
-}
+  }
+  
